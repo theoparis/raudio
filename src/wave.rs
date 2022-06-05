@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -11,14 +13,14 @@ pub struct Wave {
 }
 
 impl Wave {
-	pub fn push(&mut self, sample: Box<dyn Sample + Send + Sync>) {
-		self.data.extend(
-			sample
-				.get(self.sample_rate)
-				.iter()
-				.map(|s| *s as u8)
-				.collect::<Vec<u8>>(),
-		);
+	pub fn push(
+		&mut self,
+		mut sample: Box<dyn Sample + Send + Sync>,
+		duration: Duration,
+	) {
+		for i in 0..duration.as_secs() * self.sample_rate {
+			self.data.push(sample.get(i as f64, self.sample_rate) as u8);
+		}
 	}
 
 	pub fn into_wav_file(&self) -> Vec<u8> {
